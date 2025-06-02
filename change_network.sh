@@ -48,8 +48,8 @@ if [ -z "$CURRENT_IP_BASE" ] || [ -z "$CURRENT_LAST_OCTET" ] || [ -z "$CURRENT_S
     echo "  ethernets:"
     echo "    ens33:"
     echo "      addresses:"
-    echo "      - 10.12.45.84/24"
-    echo "      gateway4: 10.12.45.1"
+    echo "      - 10.12.90.84/24"
+    echo "      gateway4: 10.12.90.1"
     echo "      nameservers:"
     echo "        addresses:"
     echo "        - 10.10.1.30"
@@ -58,8 +58,8 @@ if [ -z "$CURRENT_IP_BASE" ] || [ -z "$CURRENT_LAST_OCTET" ] || [ -z "$CURRENT_S
     echo "        search: []"
     echo "  version: 2"
     echo "\"\"\""
-    echo "Attempting to use default values from your request (10.12.45.x/24)."
-    CURRENT_IP_BASE="10.12.45"
+    echo "Attempting to use default values from your request (10.12.90.x/24)."
+    CURRENT_IP_BASE="10.12.90"
     CURRENT_LAST_OCTET="84"
     CURRENT_SUBNET_MASK="24"
 fi
@@ -69,7 +69,7 @@ echo "-------------------------------------"
 echo "Network Configuration (Netplan)"
 echo "-------------------------------------"
 echo "Current IP address is approximately: $CURRENT_IP_BASE.$CURRENT_LAST_OCTET/$CURRENT_SUBNET_MASK"
-read -r -p "Enter new last octet for the IP address (e.g., for 10.12.45.X, enter X. Press Enter to skip): " NEW_LAST_OCTET
+read -r -p "Enter new last octet for the IP address (e.g., for 10.12.90.X, enter X. Press Enter to skip): " NEW_LAST_OCTET
 
 # --- Variable to track if changes were made ---
 CHANGES_MADE=false
