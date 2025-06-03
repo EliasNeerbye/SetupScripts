@@ -46,20 +46,6 @@ source ~/.bashrc
 source ~/.bashrc
 ```
 
-### Database Security
-
-**`setup_mongodb_auth.sh`**
-
--   Creates MongoDB admin user with root privileges
--   Enables authentication in MongoDB configuration
--   Configures IP binding for network access
--   Creates configuration backup
--   Requires root privileges
-
-```bash
-sudo ./setup_mongodb_auth.sh
-```
-
 ### Application Deployment
 
 **`deploy_api.sh`**
@@ -149,10 +135,9 @@ sudo ./setup_match_blocks.sh
 1. **Initial Setup**: `sudo ./change_network.sh` (set hostname/IP)
 2. **Install Stack**: `./install_node.sh` and `./install_mongodb.sh`
 3. **Configure Security**: `sudo ./setup_ufw.sh` and `sudo ./setup_match_blocks.sh`
-4. **Database Security**: `sudo ./setup_mongodb_auth.sh`
-5. **Web Server**: `sudo ./setup_nginx.sh`
-6. **Deploy Application**: `./deploy_api.sh`
-7. **Customize Terminal**: `./setup_login_greeting.sh`
+4. **Web Server**: `sudo ./setup_nginx.sh`
+5. **Deploy Application**: `./deploy_api.sh`
+6. **Customize Terminal**: `./setup_login_greeting.sh`
 
 ## File Structure
 
@@ -162,7 +147,6 @@ sudo ./setup_match_blocks.sh
 ├── change_network.sh # Network configuration
 ├── install_node.sh # Node.js installation
 ├── install_mongodb.sh # MongoDB installation
-├── setup_mongodb_auth.sh # MongoDB authentication
 ├── deploy_api.sh # Application deployment
 ├── setup_nginx.sh # Nginx reverse proxy
 ├── setup_ufw.sh # UFW firewall
