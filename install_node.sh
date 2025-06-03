@@ -8,15 +8,11 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-# Install node lts
+# Install and use Node LTS
 nvm install --lts
-
-# Use default
 nvm use default
 
-# Reload shell
+# Reload shell and verify
 source ~/.bashrc
-
-# Verify installation
 echo "Node.js version: $(node --version)"
 echo "npm version: $(npm --version)"

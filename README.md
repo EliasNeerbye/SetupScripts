@@ -1,154 +1,133 @@
 # Server Setup Scripts
 
-A collection of bash scripts for quickly setting up and configuring Ubuntu servers with common development tools and services.
+Bash scripts for quickly setting up Ubuntu servers with common development tools and services.
 
 ## Overview
 
-These scripts automate the installation and configuration of essential server components including Node.js, MongoDB, Nginx, and network settings. Perfect for rapid deployment and consistent server configurations.
+Automates installation and configuration of Node.js, MongoDB, Nginx, and network settings for rapid deployment.
 
 ## Scripts
 
-### 🌐 Network Configuration
+### Network Configuration
 
 **`change_network.sh`**
-- Updates system hostname and static IP address
-- Automatically detects and modifies Netplan configuration
-- **Hardcoded for 10.12.90.X network** - modify for your network
-- Creates backup of original configuration
-- Requires root privileges
+
+-   Updates hostname and static IP address
+-   Detects and modifies Netplan configuration
+-   **Hardcoded for 10.12.90.X network**
+-   Creates backup of original config
+-   Requires root privileges
 
 ```bash
 sudo ./change_network.sh
 ```
 
-### 🚀 Development Environment
+### Development Environment
 
 **`install_node.sh`**
-- Installs Node.js via NVM (Node Version Manager)
-- Installs the latest LTS version
-- Sets up proper shell environment
+
+-   Installs Node.js via NVM
+-   Installs latest LTS version
+-   Sets up shell environment
 
 ```bash
 ./install_node.sh
-source ~/.bashrc  # Required after installation
+source ~/.bashrc
 ```
 
 **`install_mongodb.sh`**
-- Installs MongoDB Community Server 8.0
-- Configures and starts MongoDB service
-- Enables automatic startup on boot
-- Adds MongoDB shell (mongosh) to PATH
+
+-   Installs MongoDB Community Server 8.0
+-   Configures and starts service
+-   Enables automatic startup
 
 ```bash
 ./install_mongodb.sh
-source ~/.bashrc  # For mongosh access
+source ~/.bashrc
 ```
 
-### 🔀 Reverse Proxy
+### Reverse Proxy
 
 **`setup_nginx.sh`**
-- Installs and configures Nginx as a reverse proxy
-- **Hardcoded configuration** for `userapi.harpy.ikt-fag.no` and `10.12.90.100`
-- Proxies requests to `localhost:3000`
-- Removes default Nginx configuration
-- Requires root privileges
+
+-   Installs and configures Nginx as reverse proxy
+-   **Hardcoded for `userapi.harpy.ikt-fag.no` and `10.12.90.100`**
+-   Proxies to `localhost:3000`
+-   Requires root privileges
 
 ```bash
 sudo ./setup_nginx.sh
 ```
 
-### 🔥 Security Configuration
+### Security Configuration
 
 **`setup_ufw.sh`**
-- Interactive UFW firewall configuration
-- Configures SSH, Nginx, MongoDB, and custom rules
-- Sets up both incoming and outgoing traffic rules
-- Requires root privileges
+
+-   Interactive UFW firewall configuration
+-   Configures SSH, Nginx, MongoDB, and custom rules
+-   Requires root privileges
 
 ```bash
 sudo ./setup_ufw.sh
 ```
 
-**`setup_ssh_match_blocks.sh`**
-- Configures SSH authentication rules per user/IP
-- Sets up key-only auth for current user
-- Enables both password and key auth for eksaminator
-- Allows password auth from trusted IP addresses
-- Requires root privileges
+**`setup_match_blocks.sh`**
+
+-   Configures SSH authentication per user/IP
+-   Key-only auth for current user
+-   Password + key auth for eksaminator
+-   Password auth from trusted IPs
+-   Requires root privileges
 
 ```bash
-sudo ./setup_ssh_match_blocks.sh
+sudo ./setup_match_blocks.sh
 ```
 
-### 🎨 Terminal Customization
+### Terminal Customization
 
-**`setup_custom_greeting.sh`**
-- Creates `.hushlogin` to suppress system login messages
-- Adds custom ASCII art greeting to `.bashrc`
-- Safe to run multiple times (won't create duplicates)
+**`setup_login_greeting.sh`**
+
+-   Creates `.hushlogin` to suppress system messages
+-   Adds ASCII art greeting to `.bashrc`
+-   Safe to run multiple times
 
 ```bash
-./setup_custom_greeting.sh
+./setup_login_greeting.sh
 ```
 
 ## Prerequisites
 
-- Ubuntu Server (tested on Ubuntu 22.04 LTS)
-- Internet connection for package downloads
-- Root/sudo access for system-level scripts
+-   Ubuntu Server (tested on 22.04 LTS)
+-   Internet connection
+-   Root/sudo access for system scripts
 
 ## Quick Start
 
-1. **Clone or download** these scripts to your server
-2. **Make scripts executable:**
-   ```bash
-   chmod +x *.sh
-   ```
-3. **Run scripts as needed** (see individual script requirements above)
+1. Make scripts executable: `chmod +x *.sh`
+2. Run scripts as needed (see requirements above)
+3. Reload shell after Node.js/MongoDB: `source ~/.bashrc`
 
 ## Important Notes
 
-⚠️ **Hardcoded Values**: Some scripts contain hardcoded network configurations and domain names. Review and modify these before use:
+⚠️ **Hardcoded Values**: Review and modify these before use:
 
-- `change_network.sh`: Network range `10.12.90.X`
-- `setup_nginx.sh`: Domain `userapi.harpy.ikt-fag.no` and IP `10.12.90.100`
-
-🔄 **Shell Reload**: After running Node.js or MongoDB installation scripts, reload your shell:
-```bash
-source ~/.bashrc
-```
-
-🛡️ **Root Access**: Network and Nginx scripts require root privileges for system configuration.
-
-## Troubleshooting
-
-- **Permission denied**: Ensure scripts are executable (`chmod +x script.sh`)
-- **Network script fails**: Verify Netplan configuration file exists
-- **Nginx fails to start**: Check configuration syntax with `nginx -t`
-- **Node/MongoDB not found**: Run `source ~/.bashrc` to reload environment
+-   `change_network.sh`: Network range `10.12.90.X`
+-   `setup_nginx.sh`: Domain `userapi.harpy.ikt-fag.no` and IP `10.12.90.100`
 
 ## File Structure
 
-```
+```md
 .
-├── README.md                     # This file
-├── change_network.sh            # Network configuration
-├── install_node.sh              # Node.js installation
-├── install_mongodb.sh           # MongoDB installation
-├── setup_nginx.sh               # Nginx reverse proxy
-├── setup_ufw.sh                 # UFW firewall configuration
-├── setup_ssh_match_blocks.sh    # SSH authentication rules
-└── setup_custom_greeting.sh     # Terminal customization
+├── README.md
+├── change_network.sh # Network configuration
+├── install_node.sh # Node.js installation
+├── install_mongodb.sh # MongoDB installation
+├── setup_nginx.sh # Nginx reverse proxy
+├── setup_ufw.sh # UFW firewall
+├── setup_match_blocks.sh # SSH authentication rules
+└── setup_login_greeting.sh # Terminal customization
 ```
 
 ## Contributing
 
-Feel free to modify these scripts for your specific environment. When making changes:
-
-1. Update hardcoded values for your network/domain
-2. Test thoroughly before production use
-3. Keep backups of original configurations
-
----
-
-**Note**: These scripts are designed for development and testing environments. Review security implications before using in production.
+Modify hardcoded values for your environment and test before production use.
