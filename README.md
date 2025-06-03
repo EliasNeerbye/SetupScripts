@@ -57,6 +57,29 @@ source ~/.bashrc  # For mongosh access
 sudo ./setup_nginx.sh
 ```
 
+### 🔥 Security Configuration
+
+**`setup_ufw.sh`**
+- Interactive UFW firewall configuration
+- Configures SSH, Nginx, MongoDB, and custom rules
+- Sets up both incoming and outgoing traffic rules
+- Requires root privileges
+
+```bash
+sudo ./setup_ufw.sh
+```
+
+**`setup_ssh_match_blocks.sh`**
+- Configures SSH authentication rules per user/IP
+- Sets up key-only auth for current user
+- Enables both password and key auth for eksaminator
+- Allows password auth from trusted IP addresses
+- Requires root privileges
+
+```bash
+sudo ./setup_ssh_match_blocks.sh
+```
+
 ### 🎨 Terminal Customization
 
 **`setup_custom_greeting.sh`**
@@ -108,12 +131,14 @@ source ~/.bashrc
 
 ```
 .
-├── README.md                    # This file
-├── change_network.sh           # Network configuration
-├── install_node.sh             # Node.js installation
-├── install_mongodb.sh          # MongoDB installation
-├── setup_nginx.sh              # Nginx reverse proxy
-└── setup_custom_greeting.sh    # Terminal customization
+├── README.md                     # This file
+├── change_network.sh            # Network configuration
+├── install_node.sh              # Node.js installation
+├── install_mongodb.sh           # MongoDB installation
+├── setup_nginx.sh               # Nginx reverse proxy
+├── setup_ufw.sh                 # UFW firewall configuration
+├── setup_ssh_match_blocks.sh    # SSH authentication rules
+└── setup_custom_greeting.sh     # Terminal customization
 ```
 
 ## Contributing
