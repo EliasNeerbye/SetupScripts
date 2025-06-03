@@ -46,6 +46,35 @@ source ~/.bashrc
 source ~/.bashrc
 ```
 
+### Database Security
+
+**`setup_mongodb_auth.sh`**
+
+-   Creates MongoDB admin user with root privileges
+-   Enables authentication in MongoDB configuration
+-   Configures IP binding for network access
+-   Creates configuration backup
+-   Requires root privileges
+
+```bash
+sudo ./setup_mongodb_auth.sh
+```
+
+### Application Deployment
+
+**`deploy_api.sh`**
+
+-   Clones Git repositories (supports GitHub URLs or repo names)
+-   Automatically finds and installs Node.js dependencies
+-   Interactive .env file setup from .env.example
+-   Installs PM2 globally if not present
+-   Starts applications with PM2 process management
+-   Configures PM2 startup scripts
+
+```bash
+./deploy_api.sh
+```
+
 ### Reverse Proxy
 
 **`setup_nginx.sh`**
@@ -113,6 +142,17 @@ sudo ./setup_match_blocks.sh
 
 -   `change_network.sh`: Network range `10.12.90.X`
 -   `setup_nginx.sh`: Domain `userapi.harpy.ikt-fag.no` and IP `10.12.90.100`
+-   `deploy_api.sh`: Default GitHub base URL `https://github.com/EliasNeerbye/`
+
+## Typical Deployment Workflow
+
+1. **Initial Setup**: `sudo ./change_network.sh` (set hostname/IP)
+2. **Install Stack**: `./install_node.sh` and `./install_mongodb.sh`
+3. **Configure Security**: `sudo ./setup_ufw.sh` and `sudo ./setup_match_blocks.sh`
+4. **Database Security**: `sudo ./setup_mongodb_auth.sh`
+5. **Web Server**: `sudo ./setup_nginx.sh`
+6. **Deploy Application**: `./deploy_api.sh`
+7. **Customize Terminal**: `./setup_login_greeting.sh`
 
 ## File Structure
 
@@ -122,6 +162,8 @@ sudo ./setup_match_blocks.sh
 ├── change_network.sh # Network configuration
 ├── install_node.sh # Node.js installation
 ├── install_mongodb.sh # MongoDB installation
+├── setup_mongodb_auth.sh # MongoDB authentication
+├── deploy_api.sh # Application deployment
 ├── setup_nginx.sh # Nginx reverse proxy
 ├── setup_ufw.sh # UFW firewall
 ├── setup_match_blocks.sh # SSH authentication rules
