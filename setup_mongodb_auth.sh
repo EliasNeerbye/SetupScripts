@@ -33,22 +33,32 @@ done
 MACHINE_IP=$(ip route get 1.1.1.1 | awk '{print $7; exit}')
 echo "Detected machine IP: $MACHINE_IP"
 
+# Check current configuration state
+MONGOD_CONF="/etc/mongod.conf"
+CONFIG_AUTH_ENABLED=false
+if grep -q "authorization: enabled" "$MONGOD_CONF"; then
+    CONFIG_AUTH_ENABLED=true
+    echo "Configuration: Authentication is enabled"
+else
+    echo "Configuration: Authentication is disabled"
+fi
+
+# Check if MongoDB is currently running with authentication
+RUNTIME_AUTH_ENABLED=false
+if mongosh --eval "db.adminCommand('listUsers')" >/dev/null 2>&1; then
+    echo "Runtime: MongoDB is running without authentication"
+else
+    echo "Runtime: MongoDB authentication appears to be enabled"
+    RUNTIME_AUTH_ENABLED=true
+fi
+
 # Get credentials from user
 read -r -p "Enter MongoDB admin username: " ADMIN_USERNAME
 read -r -s -p "Enter MongoDB admin password: " ADMIN_PASSWORD
 echo ""
 
-# Check current authentication state
-AUTH_ENABLED=false
-if mongosh --eval "db.adminCommand('listUsers')" >/dev/null 2>&1; then
-    echo "MongoDB is running without authentication"
-else
-    echo "MongoDB authentication appears to be enabled"
-    AUTH_ENABLED=true
-fi
-
-# Handle user creation or validation
-if [ "$AUTH_ENABLED" = false ]; then
+# Handle user creation or validation based on current state
+if [ "$RUNTIME_AUTH_ENABLED" = false ]; then
     echo "Creating MongoDB admin user..."
     
     # Check if any users exist
@@ -59,11 +69,12 @@ if [ "$AUTH_ENABLED" = false ]; then
     
     if [ "$USER_EXISTS" = "true" ]; then
         echo "Users already exist in admin database"
-        if ! mongosh -u "$ADMIN_USERNAME" -p "$ADMIN_PASSWORD" --authenticationDatabase admin --eval "db.adminCommand('ping')" >/dev/null 2>&1; then
-            echo "Cannot authenticate with provided credentials"
-            exit 1
+        # Test credentials without auth (should work if auth is disabled)
+        if mongosh --eval "use admin; db.auth('$ADMIN_USERNAME', '$ADMIN_PASSWORD')" >/dev/null 2>&1; then
+            echo "User '$ADMIN_USERNAME' exists and credentials are valid"
         else
-            echo "User '$ADMIN_USERNAME' already exists and credentials are valid"
+            echo "Cannot validate credentials - user may not exist or password is incorrect"
+            exit 1
         fi
     else
         # Create new admin user
@@ -84,36 +95,34 @@ if [ "$AUTH_ENABLED" = false ]; then
             }
         }
         "; then
-            echo "Admin user setup completed"
+            echo "Admin user created successfully"
         else
             echo "Failed to create admin user"
             exit 1
         fi
     fi
 else
-    # Test provided credentials
+    # Test provided credentials with authentication
     if mongosh -u "$ADMIN_USERNAME" -p "$ADMIN_PASSWORD" --authenticationDatabase admin --eval "db.adminCommand('ping')" >/dev/null 2>&1; then
         echo "Authentication with existing credentials successful"
     else
         echo "Cannot authenticate with provided credentials"
-        echo "You may need to reset MongoDB authentication or use correct credentials"
+        echo "You may need to use correct credentials or reset MongoDB authentication"
         exit 1
     fi
 fi
 
 # Create backup of mongod.conf
-MONGOD_CONF="/etc/mongod.conf"
 BACKUP_FILE="${MONGOD_CONF}.backup_$(date +%Y%m%d_%H%M%S)"
 cp "$MONGOD_CONF" "$BACKUP_FILE"
 echo "Backup created: $BACKUP_FILE"
 
-# Enable authentication in config
+# Update MongoDB configuration
 echo "Updating MongoDB configuration..."
+CONFIG_CHANGED=false
 
-if grep -q "authorization: enabled" "$MONGOD_CONF"; then
-    echo "Authorization already enabled in mongod.conf"
-else
-    # Add or uncomment authorization setting
+# Enable authentication in config
+if [ "$CONFIG_AUTH_ENABLED" = false ]; then
     if grep -q "^#.*authorization:" "$MONGOD_CONF"; then
         sed -i 's/^#.*authorization:.*/  authorization: enabled/' "$MONGOD_CONF"
     elif grep -q "^security:" "$MONGOD_CONF"; then
@@ -123,6 +132,9 @@ else
         echo "  authorization: enabled" >> "$MONGOD_CONF"
     fi
     echo "Authorization enabled in mongod.conf"
+    CONFIG_CHANGED=true
+else
+    echo "Authorization already enabled in mongod.conf"
 fi
 
 # Configure IP binding
@@ -136,23 +148,26 @@ else
         sed -i "s/bindIp: .*/bindIp: $MACHINE_IP,127.0.0.1/" "$MONGOD_CONF"
     fi
     echo "Updated bindIp to include $MACHINE_IP"
+    CONFIG_CHANGED=true
 fi
 
-echo "MongoDB configuration updated"
-
-# Restart MongoDB service
-echo "Restarting MongoDB service..."
-systemctl restart mongod
-sleep 5
-
-# Verify service started
-if systemctl is-active --quiet mongod; then
-    echo "MongoDB restarted successfully"
-else
-    echo "Failed to restart MongoDB. Restoring backup..."
-    cp "$BACKUP_FILE" "$MONGOD_CONF"
+# Restart MongoDB if configuration changed
+if [ "$CONFIG_CHANGED" = true ]; then
+    echo "Restarting MongoDB service..."
     systemctl restart mongod
-    exit 1
+    sleep 5
+
+    # Verify service started
+    if systemctl is-active --quiet mongod; then
+        echo "MongoDB restarted successfully"
+    else
+        echo "Failed to restart MongoDB. Restoring backup..."
+        cp "$BACKUP_FILE" "$MONGOD_CONF"
+        systemctl restart mongod
+        exit 1
+    fi
+else
+    echo "No configuration changes needed"
 fi
 
 # Test authentication with retry logic
