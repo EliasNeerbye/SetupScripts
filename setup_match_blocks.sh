@@ -40,21 +40,14 @@ ask_yes_no() {
 
 SSHD_CONFIG="/etc/ssh/sshd_config"
 
-# Get original user
-if [ -n "$SUDO_USER" ]; then
-    ORIGINAL_USER="$SUDO_USER"
-else
-    ORIGINAL_USER="$USER"
-fi
-
-echo "Current user: $ORIGINAL_USER"
+echo "Configuring SSH authentication rules..."
 
 # Create backup
 BACKUP_FILE="${SSHD_CONFIG}.backup_$(date +%Y%m%d_%H%M%S)"
 cp "$SSHD_CONFIG" "$BACKUP_FILE"
 echo "Backup created: $BACKUP_FILE"
 
-# Remove existing match blocks if present
+# Remove existing match blocks
 if grep -q "^Match User\|^Match Address" "$SSHD_CONFIG"; then
     echo "Found existing Match blocks"
     if ask_yes_no "Remove existing Match blocks and continue?"; then
@@ -66,27 +59,49 @@ if grep -q "^Match User\|^Match Address" "$SSHD_CONFIG"; then
     fi
 fi
 
-# Get trusted IP for password authentication
-trusted_ip=$(get_ip_input "Enter trusted IP address for password authentication")
+# Remove existing global authentication settings
+sed -i '/^PasswordAuthentication\|^PubkeyAuthentication/d' "$SSHD_CONFIG"
+
+# Set global defaults
+cat >> "$SSHD_CONFIG" << 'EOF'
+
+# Global defaults
+PasswordAuthentication no
+PubkeyAuthentication no
+EOF
+
+# Get optional trusted IP
+trusted_ip=""
+if ask_yes_no "Configure a trusted IP address for full access?"; then
+    trusted_ip=$(get_ip_input "Enter trusted IP address")
+fi
 
 # Add match blocks
 cat >> "$SSHD_CONFIG" << EOF
 
-# Custom Match Blocks
-# User: $ORIGINAL_USER - Key-only authentication
-Match User $ORIGINAL_USER
-    PasswordAuthentication no
+# Match blocks
+Match User harpyadmin
     PubkeyAuthentication yes
+    PasswordAuthentication no
 
-# User: eksaminator - Both password and key authentication
+Match User sensor
+    PubkeyAuthentication yes
+    PasswordAuthentication no
+
 Match User eksaminator
     PasswordAuthentication yes
-    PubkeyAuthentication yes
+    PubkeyAuthentication no
+EOF
 
-# Trusted IP: $trusted_ip - Password authentication allowed
+# Add trusted IP block
+if [ -n "$trusted_ip" ]; then
+    cat >> "$SSHD_CONFIG" << EOF
+
 Match Address $trusted_ip
     PasswordAuthentication yes
+    PubkeyAuthentication yes
 EOF
+fi
 
 echo "Match blocks added to SSH config"
 
@@ -100,12 +115,16 @@ else
     exit 1
 fi
 
-# Summary
+# Display summary
 echo ""
 echo "Configuration Summary:"
-echo "• User '$ORIGINAL_USER': Key-only authentication"
-echo "• User 'eksaminator': Password + key authentication"
-echo "• IP '$trusted_ip': Password authentication allowed"
+echo "• Default: All authentication disabled"
+echo "• User 'harpyadmin': Key-only"
+echo "• User 'sensor': Key-only"  
+echo "• User 'eksaminator': Password-only"
+if [ -n "$trusted_ip" ]; then
+    echo "• IP '$trusted_ip': Password + key"
+fi
 
 # Restart SSH service
 if ask_yes_no "Restart SSH service now?"; then
@@ -115,4 +134,4 @@ else
     echo "Remember to restart SSH: sudo systemctl restart sshd"
 fi
 
-echo "Setup complete! Test SSH access before closing this session."
+echo "Setup complete!"
